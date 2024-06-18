@@ -1,64 +1,64 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import math
+import csv
+import re
 
-family = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-badpairs = [('A', 'B'), ('D', 'C'),('G', 'H'), ('E', 'F'), ('B','A'), ('C','D'),('H','G'), ('F','E')]
-year2020 = [
-    ('A', 'C'), 
-    ('B', 'G'), 
-    ('C', 'H'),
-    ('D', 'B'), 
-    ('E', 'A'), 
-    ('G', 'E'), 
-    ('H', 'D')
-]
+# Import names
+names_file = 'names.csv'  # Adjust the path if necessary
 
-year2021 = [
-    ('A', 'H'), 
-    ('B', 'E'), 
-    ('C', 'A'), 
-    ('D','F'), 
-    ('E', 'G'), 
-    ('F', 'C'), 
-    ('G', 'D'), 
-    ('H', 'B')
-]
+# Function to read CSV and convert to list of names
+def read_names_from_csv(names_file):
+    with open(names_file, mode='r') as file:
+        reader = csv.reader(file)
+        names = next(reader)  # Read the first row
+    return names
 
-year2022 = [
-    ('A', 'E'), 
-    ('B', 'D'), 
-    ('C', 'G'), 
-    ('D', 'A'), 
-    ('E', 'H'), 
-    ('F', 'B'), 
-    ('G', 'F'), 
-    ('H', 'C')
-]
+names = read_names_from_csv(names_file)
 
-year2023 = [
-    ('A', 'D'), 
-    ('D', 'E'), 
-    ('E', 'C'), 
-    ('C', 'B'), 
-    ('B', 'H'), 
-    ('H', 'F'), 
-    ('F', 'G'), 
-    ('G', 'A')
-]
+# Import badpairs
+badpairs_file = 'badpairs.csv'  # Adjust the path if necessary
+
+# Function to read the CSV and convert to required variables
+def read_csv_to_variables(file_path):
+    variables = {}
+    current_var = None
+    year_pattern = re.compile(r'^year\d{4}$')  # Regular expression to match 'year****'
+
+    with open(file_path, mode='r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if len(row) == 1 and (row[0] == "badpairs" or year_pattern.match(row[0])):
+                current_var = row[0]
+                variables[current_var] = []
+            elif current_var:
+                variables[current_var].append(tuple(row))
+
+    # Post-process badpairs to include reverse pairs
+    badpairs = variables['badpairs']
+    full_badpairs = badpairs + [(b, a) for a, b in badpairs]
+    variables['badpairs'] = full_badpairs
+
+    return variables
+
+# Read the CSV file and convert it to variables
+variables = read_csv_to_variables(badpairs_file)
+
+# Dynamically declare variables
+globals().update(variables)
 
 prevYears = [year2023,year2022,year2021,year2020]
 
 graph = nx.DiGraph()
 
 # Add nodes to the graph
-graph.add_nodes_from(family)
+graph.add_nodes_from(names)
 
 # Add directed edges from each node to every other node
-for i in range(len(family)):
-    for j in range(len(family)):
+for i in range(len(names)):
+    for j in range(len(names)):
         if i != j:
-            graph.add_edge(family[i], family[j])
+            graph.add_edge(names[i], names[j])
 
 # Delete edges in badpairs
 for edge in badpairs:
