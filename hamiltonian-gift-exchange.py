@@ -48,7 +48,6 @@ variables = read_csv_to_variables(badpairs_file)
 globals().update(variables)
 
 prevYears = [year2023,year2022,year2021,year2020]
-
 graph = nx.DiGraph()
 
 # Add nodes to the graph
