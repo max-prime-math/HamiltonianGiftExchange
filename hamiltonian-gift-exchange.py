@@ -1,3 +1,4 @@
+import random
 import networkx as nx
 import matplotlib.pyplot as plt
 import math
@@ -47,7 +48,7 @@ variables = read_csv_to_variables(badpairs_file)
 # Dynamically declare variables
 globals().update(variables)
 
-prevYears = [year2023,year2022,year2021,year2020]
+prevYears = [year2023]
 graph = nx.DiGraph()
 
 # Add nodes to the graph
@@ -73,7 +74,6 @@ plt.show()
 
 # Big program
 
-
 def find_hamiltonian_cycle(graph, start_node, current_node, visited, path):
     visited[current_node] = True
     path.append(current_node)
@@ -84,7 +84,10 @@ def find_hamiltonian_cycle(graph, start_node, current_node, visited, path):
             path.append(start_node)
             return True
 
-    for neighbor in graph.successors(current_node):
+    neighbors = list(graph.successors(current_node))
+    random.shuffle(neighbors)  # Randomize the order of neighbors
+
+    for neighbor in neighbors:
         if not visited[neighbor]:
             if find_hamiltonian_cycle(graph, start_node, neighbor, visited, path):
                 return True
@@ -185,8 +188,8 @@ def generate_ordered_pairs(path):
     # Add the pair between the last and first element to complete the cycle
     ordered_pairs.append((path[-1], path[0]))
 
-    print(ordered_pairs)
+    #print(ordered_pairs)
 
 generate_ordered_pairs(cycle[0:8])
-generate_relationships(cycle[0:8])
+#generate_relationships(cycle[0:8])
 visualize_path(graph,cycle[0:8])
