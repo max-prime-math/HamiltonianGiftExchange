@@ -5,58 +5,38 @@ This program creates a Hamiltonian cycle for a gift exchange with many people.  
 Download and run via Python.  You may need to install [networkx](https://networkx.org/documentation/stable/install.html).
 
 ## Usage
-Change family variable to the members of the family, or whomever is participating in the gift exchange
+Open names.csv and write your list of names.  Make sure to not include any unnecessary whitespace.
 ```
-family = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+A,B,C,D,E,F,G,H
 ```
-Then include badpairs: these are people who don't want to buy a gift for each other, for example partners who will buy a gift regardless.
+Now open badpairs.csv to include pairs who do not go together.  The top rows underneath the text badpairs are universal: no matter what these people will not give gifts to each other.
 ```
-badpairs = [('A', 'B'), ('D', 'C'),('G', 'H'), ('E', 'F'), ('B','A'), ('C','D'),('H','G'), ('F','E')]
+badpairs
+A,B
+C,D
+E,F
+G,H
 ```
-Include a list of previous years.  This will get added to badpairs.  This is handy so people don't gift someone for several years in a row.
+Still in badpairs.csv, you can also add previous years' exchanges.  This will allow you to include previous years into badpairs, in other words, people don't have to buy for the same person again for several years.
 ```
-year2020 = [
-    ('A', 'C'), 
-    ('B', 'G'), 
-    ('C', 'H'),
-    ('D', 'B'), 
-    ('E', 'A'), 
-    ('G', 'E'), 
-    ('H', 'D')
-]
-
-year2021 = [
-    ('A', 'H'), 
-    ('B', 'E'), 
-    ('C', 'A'), 
-    ('D','F'), 
-    ('E', 'G'), 
-    ('F', 'C'), 
-    ('G', 'D'), 
-    ('H', 'B')
-]
-
-year2022 = [
-    ('A', 'E'), 
-    ('B', 'D'), 
-    ('C', 'G'), 
-    ('D', 'A'), 
-    ('E', 'H'), 
-    ('F', 'B'), 
-    ('G', 'F'), 
-    ('H', 'C')
-]
-
-year2023 = [
-    ('A', 'D'), 
-    ('D', 'E'), 
-    ('E', 'C'), 
-    ('C', 'B'), 
-    ('B', 'H'), 
-    ('H', 'F'), 
-    ('F', 'G'), 
-    ('G', 'A')
-]
+year2020
+A,C
+B,G
+C,H
+D,B
+E,A
+G,E
+H,D
+...
+year2023
+A,D
+D,E
+E,C
+C,B
+B,H
+H,F
+F,G
+G,A
 ```
 Make a list of the previous years you want to include in badpairs.  If you go back too many years, or if you have too many badpairs, a Hamiltonian cycle may not exist.  So you may need to alter this until a Hamiltonian cycle exists.
 ```
@@ -79,9 +59,7 @@ Hamiltonian Cycle: ['A', 'G', 'C', 'E', 'B', 'F', 'D', 'H', 'A']
 ```
 
 ## Roadmap
-- Make a separate names file.
-- Make a separate badpairs file.
-- Make program more interactive, maybe an initialization routine if names and badpairs are blank. 
+- Initialization routine if names and badpairs are blank. 
 - Ask user to include latest cycle in the badpairs file, prompt for name.
 - Automate the prevYears portion: make it include as many years as possible while a Hamiltonian cycle exists.
 - Package in a docker container.
