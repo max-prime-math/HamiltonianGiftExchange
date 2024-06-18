@@ -59,9 +59,7 @@ Hamiltonian Cycle: ['A', 'G', 'C', 'E', 'B', 'F', 'D', 'H', 'A']
 ```
 
 ## Roadmap
-- Make a separate names file.
-- Make a separate badpairs file.
-- Make program more interactive, maybe an initialization routine if names and badpairs are blank. 
+- Initialization routine if names and badpairs are blank. 
 - Ask user to include latest cycle in the badpairs file, prompt for name.
 - Automate the prevYears portion: make it include as many years as possible while a Hamiltonian cycle exists.
 - Package in a docker container.
