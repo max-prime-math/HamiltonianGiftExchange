@@ -16,6 +16,7 @@ def read_names_from_csv(names_file):
     return names
 
 names = read_names_from_csv(names_file)
+print(names)
 
 # Import badpairs
 badpairs_file = 'badpairs.csv'  # Adjust the path if necessary
@@ -31,7 +32,7 @@ def read_csv_to_variables(file_path):
         for row in reader:
             if len(row) == 1 and (row[0] == "badpairs" or year_pattern.match(row[0])):
                 current_var = row[0]
-                variables[current_var] = []
+                variables[current_var].append(tuple(row))
             elif current_var:
                 variables[current_var].append(tuple(row))
 
@@ -42,36 +43,58 @@ def read_csv_to_variables(file_path):
 
     return variables
 
+
 # Read the CSV file and convert it to variables
 variables = read_csv_to_variables(badpairs_file)
-
+badpairs = variables.get('badpairs')
+print('badpairs: ',badpairs)
 # Dynamically declare variables
 globals().update(variables)
+prevYears=[]
+for var in variables.values():
+    prevYears.append(var)
+prevYears.pop(0)
 
-prevYears = [year2023]
-graph = nx.DiGraph()
+# Remove old years with repeated gift exchanges, making the lists unique
+def filter_unique_lists(lists):
+    unique_lists = []
 
-# Add nodes to the graph
-graph.add_nodes_from(names)
+    for lst in lists:
+        # Check if current list shares any element with already added lists
+        if not any(any(elem in ul for elem in lst) for ul in unique_lists):
+            unique_lists.append(lst)
 
-# Add directed edges from each node to every other node
-for i in range(len(names)):
-    for j in range(len(names)):
-        if i != j:
-            graph.add_edge(names[i], names[j])
+    return unique_lists
 
-# Delete edges in badpairs
-for edge in badpairs:
-    graph.remove_edge(*edge)
+prevYears = filter_unique_lists(prevYears)
 
-# Remove pairs from previous years
-for year in prevYears:
-    for edge in year:
+print(prevYears)
+
+def generateGraph(names,badpairs,prevYears):
+    graph = nx.DiGraph()
+
+    # Add nodes to the graph
+    graph.add_nodes_from(names)
+
+    # Add directed edges from each node to every other node
+    for i in range(len(names)):
+        for j in range(len(names)):
+            if i != j:
+                graph.add_edge(names[i], names[j])
+
+    # Delete edges in badpairs
+    for edge in badpairs:
         graph.remove_edge(*edge)
 
-nx.draw(graph, with_labels=True, arrows=True)
-plt.show()
+    # Remove pairs from previous years
+    for year in prevYears:
+        for edge in year:
+            graph.remove_edge(*edge)
 
+    nx.draw(graph, with_labels=True, arrows=True)
+    plt.show()
+
+graph = generateGraph(names,badpairs,prevYears)
 # Big program
 
 def find_hamiltonian_cycle(graph, start_node, current_node, visited, path):
@@ -104,19 +127,19 @@ def find_hamiltonian_cycle_wrapper(graph):
     for node in graph:
         if find_hamiltonian_cycle(graph, node, node, visited, path):
             return path
-
-    return None
+    return 0
 
 cycle = find_hamiltonian_cycle_wrapper(graph)
 
 if cycle:
     print('Hamiltonian Cycle:', cycle)
-else:
-    print('No Hamiltonian Cycle found.')
+# else:
+#     while not(cycle):
+#         print('No Hamiltonian Cycle found.  Changing prevYears.')
+#         prevYears.pop()
+#         graph = generateGraph(names,badpairs,prevYears)
+#         cycle = find_hamiltonian_cycle_wrapper(graph)
 
-def remove_last_element(lst):
-    if lst:
-        lst.pop()
 
 def visualize_path_with_graph(graph, path):
     pos = nx.circular_layout(graph)  # Circular layout for nodes
@@ -190,6 +213,6 @@ def generate_ordered_pairs(path):
 
     #print(ordered_pairs)
 
-generate_ordered_pairs(cycle[0:8])
+generate_ordered_pairs(cycle[0:len(names)])
 #generate_relationships(cycle[0:8])
-visualize_path(graph,cycle[0:8])
+visualize_path(graph,cycle[0:len(names)])
