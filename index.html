@@ -1,11 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Hamiltonian Gift Exchange</title>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hamiltonian Gift Exchange</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    input[type="file"] { margin-bottom: 1rem; }
+    pre { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; }
+  </style>
 </head>
 <body>
   <h1>🎁 Hamiltonian Gift Exchange</h1>
-  <p>This site will eventually let you generate Hamiltonian gift exchanges from CSV data!</p>
+  <p>Select a CSV file with names and exchange constraints:</p>
+  <input type="file" id="csvInput" accept=".csv" />
+  <button onclick="parseCSV()">Parse CSV</button>
+
+  <h2>Parsed Data</h2>
+  <pre id="output"></pre>
+
+  <script>
+    function parseCSV() {
+      const fileInput = document.getElementById('csvInput');
+      const output = document.getElementById('output');
+
+      if (!fileInput.files.length) {
+        alert("Please choose a CSV file first.");
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const text = e.target.result;
+        const lines = text.trim().split(/\r?\n/);
+        const parsed = lines.map(line => line.split(',').map(s => s.trim()));
+        output.textContent = JSON.stringify(parsed, null, 2);
+        // Here you can pass parsed to your Hamiltonian logic
+      };
+
+      reader.readAsText(file);
+    }
+  </script>
 </body>
 </html>
