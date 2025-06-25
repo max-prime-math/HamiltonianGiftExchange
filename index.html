@@ -6,41 +6,78 @@
   <title>Hamiltonian Gift Exchange</title>
   <style>
     body { font-family: sans-serif; margin: 2rem; }
-    input[type="file"] { margin-bottom: 1rem; }
+    input[type="file"], textarea, button { display: block; margin-bottom: 1rem; width: 100%; max-width: 500px; }
     pre { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; }
   </style>
 </head>
 <body>
   <h1>🎁 Hamiltonian Gift Exchange</h1>
-  <p>Select a CSV file with names and exchange constraints:</p>
-  <input type="file" id="csvInput" accept=".csv" />
-  <button onclick="parseCSV()">Parse CSV</button>
+
+  <h2>Upload CSV Files</h2>
+  <label>Names CSV (e.g., A, B, C, D):</label>
+  <input type="file" id="namesCSV" accept=".csv" />
+
+  <label>Bad Pairs CSV (e.g., A,B on each line):</label>
+  <input type="file" id="badpairsCSV" accept=".csv" />
+
+  <button onclick="parseCSVs()">Parse CSV Files</button>
+
+  <h2>Or Enter Data Manually</h2>
+  <label>Names (comma-separated):</label>
+  <textarea id="namesManual" rows="2" placeholder="A, B, C, D"></textarea>
+
+  <label>Bad Pairs (one pair per line, comma-separated):</label>
+  <textarea id="badpairsManual" rows="6" placeholder="A,B\nC,D"></textarea>
+
+  <button onclick="parseManual()">Parse Manual Input</button>
 
   <h2>Parsed Data</h2>
   <pre id="output"></pre>
 
   <script>
-    function parseCSV() {
-      const fileInput = document.getElementById('csvInput');
-      const output = document.getElementById('output');
+    function parseCSVs() {
+      const namesFile = document.getElementById('namesCSV').files[0];
+      const badpairsFile = document.getElementById('badpairsCSV').files[0];
 
-      if (!fileInput.files.length) {
-        alert("Please choose a CSV file first.");
+      if (!namesFile || !badpairsFile) {
+        alert("Please upload both CSV files.");
         return;
       }
 
-      const file = fileInput.files[0];
-      const reader = new FileReader();
+      const reader1 = new FileReader();
+      const reader2 = new FileReader();
+      const output = document.getElementById('output');
+      let names = [], badpairs = [];
 
-      reader.onload = function (e) {
-        const text = e.target.result;
-        const lines = text.trim().split(/\r?\n/);
-        const parsed = lines.map(line => line.split(',').map(s => s.trim()));
-        output.textContent = JSON.stringify(parsed, null, 2);
-        // Here you can pass parsed to your Hamiltonian logic
+      reader1.onload = function (e) {
+        names = e.target.result.trim().split(',').map(s => s.trim());
+        if (badpairs.length > 0) showParsed();
       };
 
-      reader.readAsText(file);
+      reader2.onload = function (e) {
+        badpairs = e.target.result.trim().split(/\r?\n/).map(line => {
+          const [a, b] = line.split(',').map(s => s.trim());
+          return [a, b];
+        });
+        if (names.length > 0) showParsed();
+      };
+
+      reader1.readAsText(namesFile);
+      reader2.readAsText(badpairsFile);
+
+      function showParsed() {
+        output.textContent = JSON.stringify({ names, badpairs }, null, 2);
+        // Plug this into your graph logic next
+      }
+    }
+
+    function parseManual() {
+      const names = document.getElementById('namesManual').value.split(',').map(s => s.trim());
+      const badpairs = document.getElementById('badpairsManual').value.trim().split(/\r?\n/).map(line => {
+        const [a, b] = line.split(',').map(s => s.trim());
+        return [a, b];
+      });
+      document.getElementById('output').textContent = JSON.stringify({ names, badpairs }, null, 2);
     }
   </script>
 </body>
