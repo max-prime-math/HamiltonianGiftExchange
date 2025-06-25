@@ -1,121 +1,169 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hamiltonian Gift Exchange</title>
     <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #f8f9fa;
-            color: #333;
-        }
+      .button-group {
+        text-align: center;
+        margin: 20px 0;
+      }
 
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
+      .button-group button {
+        margin: 5px;
+      }
 
-        .flex-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-        }
+      button {
+        font-size: 1rem;
+        padding: 10px 20px;
+        border-radius: 5px;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+      }
 
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      .output-section {
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: center;
+      }
+
+      #graphOutput svg {
+        display: block;
+        margin: 0 auto;
+        max-width: 100%;
+      }
+
+      #result {
+        text-align: left;
+        margin: 0 auto 20px;
+        max-width: 500px;
+        font-size: 1.1em;
+        background: #f4f4f4;
+        padding: 10px;
+        border-radius: 5px;
+      }
+
+      body {
+        font-family: "Segoe UI", sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f8f9fa;
+        color: #333;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+
+      .flex-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+      }
+
+      .column {
+        flex: 1 2 200px;
+        padding: 15px;
+        box-sizing: border-box;
+      }
+
+      @media (max-width: 768px) {
         .column {
-            flex: 1 1 300px;
-            max-width: 500px;
+          margin-bottom: 20px;
+        }
+      }
+
+      textarea {
+        width: 100%;
+        height: 100px;
+        padding: 10px;
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        resize: vertical;
+      }
+
+      input[type="file"] {
+        margin-top: 8px;
+        font-size: 0.9rem;
+      }
+
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        font-size: 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        margin: 10px 5px 0 0;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      pre {
+        background: #ffffff;
+        border: 1px solid #ccc;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        font-size: 1rem;
+      }
+
+      @media (max-width: 600px) {
+        body {
+          padding: 10px;
         }
 
         textarea {
-            width: 100%;
-            height: 100px;
-            padding: 10px;
-            font-size: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            resize: vertical;
-        }
-
-        input[type="file"] {
-            margin-top: 8px;
-            font-size: 0.9rem;
+          font-size: 1rem;
+          height: 120px;
         }
 
         button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 12px 18px;
-            font-size: 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            margin: 10px 5px 0 0;
+          width: 100%;
+          margin-bottom: 10px;
         }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        #graphOutput {
-            margin-top: 30px;
-            display: flex;
-            justify-content: center;
-        }
-
-        pre {
-            background: #ffffff;
-            border: 1px solid #ccc;
-            padding: 15px;
-            border-radius: 6px;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            font-size: 1rem;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            textarea {
-                font-size: 1rem;
-                height: 120px;
-            }
-
-            button {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>Hamiltonian Gift Exchange</h1>
 
     <div class="flex-container">
-        <div class="column">
-            <h3>Names</h3>
-            <textarea id="namesInput">A, B, C, D, E, F, G, H</textarea>
-            <input type="file" id="namesFile" accept=".csv" />
-        </div>
-        <div class="column">
-            <h3>Bad Pairs</h3>
-            <textarea id="badpairsInput">A,B
+      <div class="column">
+        <h3>Names</h3>
+        <textarea id="namesInput">A, B, C, D, E, F, G, H</textarea>
+        <input type="file" id="namesFile" accept=".csv" />
+      </div>
+      <div class="column">
+        <h3>Bad Pairs</h3>
+        <textarea id="badpairsInput">
+A,B
 C,D
 E,F
-G,H</textarea>
-            <input type="file" id="badpairsFile" accept=".csv" />
-        </div>
-        <div class="column">
-            <h3>History</h3>
-            <textarea id="historyInput">2023,
+G,H</textarea
+        >
+        <input type="file" id="badpairsFile" accept=".csv" />
+      </div>
+      <div class="column">
+        <h3>History</h3>
+        <textarea id="historyInput">
+2023,
 A,B
 B,C
 C,D
@@ -123,381 +171,485 @@ D,E
 E,F
 F,G
 G,H
-H,A</textarea>
-            <input type="file" id="historyFile" accept=".csv" />
-        </div>
+H,A</textarea
+        >
+        <input type="file" id="historyFile" accept=".csv" />
+      </div>
     </div>
 
-    <div style="margin-top: 20px;">
-        <button onclick="loadAllCSVs()">📂 Load</button>
-        <span id="buttonContainer">
-            <button onclick="runHamiltonianProcess()">Calculate Exchange</button>
-        </span>
-        <button onclick="allowLaterRepeats()" id="earlierRepeatsBtn" style="display:none;">Allow Later Repeats</button>
-        <button onclick="findMaximalInterestingCycles()">Calculate Interesting Exchange</button>
+    <div class="button-group">
+      <button onclick="loadAllCSVs()">📂 Load</button>
+      <span id="buttonContainer">
+        <button onclick="runHamiltonianProcess()">Calculate Exchange</button>
+      </span>
+      <button
+        onclick="allowLaterRepeats()"
+        id="earlierRepeatsBtn"
+        style="display: none"
+      >
+        Allow Later Repeats
+      </button>
+      <!-- <button onclick="findMaximalInterestingCycles()">
+        Calculate Interesting Exchange
+      </button> -->
     </div>
 
-    <h3>Result</h3>
-    <pre id="result">Upload CSVs or manually edit the lists to get started.</pre>
+    <div class="output-section">
+      <h3>Result</h3>
+      <div id="result">
+        <h3>📘 How to Use</h3>
+        <ul>
+          <li>
+            <strong>Names</strong>
+            <br />
+            Enter a comma-separated list of participants.
+          </li>
+          <li>
+            <strong>Bad Pairs</strong>
+            <br />
+            Enter pairs (one per line) of people who should never exchange (e.g.
+            <code>A,B</code>).
+          </li>
+          <li>
+            <strong>History</strong>
+            <br />
+            Add past years of exchanges. Begin each block with the year followed
+            by the pairs.
+          </li>
+        </ul>
+        <p><strong>Example History Format:</strong></p>
+        <pre>
+2023,
+Alice,Bob
+Bob,Charlie
+...
+  </pre
+        >
+        <p>📂 Click <strong>Load</strong> to parse your data.</p>
+        <p>
+          ▶️ Click <strong>Calculate Exchange</strong> to generate a valid gift
+          cycle.
+        </p>
+      </div>
 
-    <div id="graphOutput"></div>
+      <div id="graphOutput"></div>
+    </div>
 
     <script>
-        let parsedNames = [];
-        let parsedBadPairs = [];
-        let parsedHistory = {};
-        let allValidCycles = [];
-        let baseGraph = {};
-        let workingGraph = {};
-        let lastUsedYearIndex = 0;
+      let parsedNames = [];
+      let parsedBadPairs = [];
+      let parsedHistory = {};
+      let allValidCycles = [];
+      let baseGraph = {};
+      let workingGraph = {};
+      let lastUsedYearIndex = 0;
 
-        function parseCSVText(text) {
-            return text.trim().split("\n").map(line => line.split(",").map(s => s.trim()));
+      function parseCSVText(text) {
+        return text
+          .trim()
+          .split("\n")
+          .map((line) => line.split(",").map((s) => s.trim()));
+      }
+
+      function parseHistoryText(text) {
+        const lines = text.trim().split("\n");
+        const history = {};
+        let currentYear = null;
+        for (let line of lines) {
+          if (/^\d{4},?$/.test(line.trim())) {
+            currentYear = line.replace(",", "").trim();
+            history[currentYear] = [];
+          } else if (currentYear) {
+            const [a, b] = line.split(",").map((s) => s.trim());
+            if (a && b) history[currentYear].push([a, b]);
+          }
         }
+        return history;
+      }
 
-        function parseHistoryText(text) {
-            const lines = text.trim().split("\n");
-            const history = {};
-            let currentYear = null;
-            for (let line of lines) {
-                if (/^\d{4},?$/.test(line.trim())) {
-                    currentYear = line.replace(",", "").trim();
-                    history[currentYear] = [];
-                } else if (currentYear) {
-                    const [a, b] = line.split(",").map(s => s.trim());
-                    if (a && b) history[currentYear].push([a, b]);
-                }
+      function readFile(input, callback) {
+        if (input.files.length === 0) return;
+        const reader = new FileReader();
+        reader.onload = (e) => callback(e.target.result);
+        reader.readAsText(input.files[0]);
+      }
+
+      function loadAllCSVs() {
+        parsedNames = document
+          .getElementById("namesInput")
+          .value.split(",")
+          .map((x) => x.trim());
+        parsedBadPairs = parseCSVText(
+          document.getElementById("badpairsInput").value
+        );
+        parsedHistory = parseHistoryText(
+          document.getElementById("historyInput").value
+        );
+
+        readFile(document.getElementById("namesFile"), (text) => {
+          parsedNames = text.split(",").map((x) => x.trim());
+          document.getElementById("namesInput").value = parsedNames.join(", ");
+          updateGraph();
+        });
+
+        readFile(document.getElementById("badpairsFile"), (text) => {
+          parsedBadPairs = parseCSVText(text);
+          document.getElementById("badpairsInput").value = parsedBadPairs
+            .map((pair) => pair.join(","))
+            .join("\n");
+          updateGraph();
+        });
+
+        readFile(document.getElementById("historyFile"), (text) => {
+          parsedHistory = parseHistoryText(text);
+          const historyText = Object.entries(parsedHistory)
+            .map(
+              ([year, pairs]) =>
+                `${year},\n${pairs.map((p) => p.join(",")).join("\n")}`
+            )
+            .join("\n");
+          document.getElementById("historyInput").value = historyText;
+        });
+
+        // Initial update if no files uploaded
+        updateGraph();
+        document.getElementById("result").innerHTML = "";
+      }
+
+      function updateGraph() {
+        baseGraph = buildGraph(parsedNames, parsedBadPairs);
+        drawGraph(baseGraph);
+      }
+
+      function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+      }
+
+      function buildGraph(names, badPairs) {
+        const graph = {};
+        names.forEach((name) => {
+          graph[name] = names.filter(
+            (n) =>
+              n !== name &&
+              !badPairs.some(
+                ([a, b]) => (a === name && b === n) || (a === n && b === name)
+              )
+          );
+        });
+        return graph;
+      }
+
+      function findAllHamiltonianCycles(graph, startNode) {
+        const cycles = [];
+
+        function dfs(path, visited) {
+          const current = path[path.length - 1];
+          if (path.length === Object.keys(graph).length) {
+            if (graph[current].includes(startNode)) {
+              cycles.push([...path, startNode]);
             }
-            return history;
-        }
-
-        function readFile(input, callback) {
-            if (input.files.length === 0) return;
-            const reader = new FileReader();
-            reader.onload = e => callback(e.target.result);
-            reader.readAsText(input.files[0]);
-        }
-
-        function loadAllCSVs() {
-                parsedNames = document.getElementById("namesInput").value.split(",").map(x => x.trim());
-                parsedBadPairs = parseCSVText(document.getElementById("badpairsInput").value);
-                parsedHistory = parseHistoryText(document.getElementById("historyInput").value);
-
-                readFile(document.getElementById("namesFile"), text => {
-                    parsedNames = text.split(",").map(x => x.trim());
-                    document.getElementById("namesInput").value = parsedNames.join(", ");
-                    updateGraph();
-                });
-
-                readFile(document.getElementById("badpairsFile"), text => {
-                    parsedBadPairs = parseCSVText(text);
-                    document.getElementById("badpairsInput").value = parsedBadPairs.map(pair => pair.join(",")).join("\n");
-                    updateGraph();
-                });
-
-                readFile(document.getElementById("historyFile"), text => {
-                    parsedHistory = parseHistoryText(text);
-                    const historyText = Object.entries(parsedHistory)
-                        .map(([year, pairs]) => `${year},\n${pairs.map(p => p.join(",")).join("\n")}`)
-                        .join("\n");
-                    document.getElementById("historyInput").value = historyText;
-                });
-
-                // Initial update if no files uploaded
-                updateGraph();
+            return;
+          }
+          for (const neighbor of shuffle([...graph[current]])) {
+            if (!visited.has(neighbor)) {
+              visited.add(neighbor);
+              path.push(neighbor);
+              dfs(path, visited);
+              visited.delete(neighbor);
+              path.pop();
             }
-
-            function updateGraph() {
-                    baseGraph = buildGraph(parsedNames, parsedBadPairs);
-                    drawGraph(baseGraph);
-                }
-
-
-
-
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
+          }
         }
 
-        function buildGraph(names, badPairs) {
-            const graph = {};
-            names.forEach(name => {
-                graph[name] = names.filter(n =>
-                    n !== name &&
-                    !badPairs.some(([a, b]) =>
-                        (a === name && b === n) || (a === n && b === name)
-                    )
-                );
+        dfs([startNode], new Set([startNode]));
+        return cycles;
+      }
+
+      function runHamiltonianProcess() {
+        baseGraph = buildGraph(parsedNames, parsedBadPairs);
+        workingGraph = JSON.parse(JSON.stringify(baseGraph));
+        const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a);
+        allValidCycles = [];
+        lastUsedYearIndex = 0;
+
+        for (let i = 0; i < historyYears.length; i++) {
+          const year = historyYears[i];
+          const foundCycles = findAllHamiltonianCycles(
+            workingGraph,
+            parsedNames[0]
+          );
+
+          if (foundCycles.length > 0) {
+            allValidCycles = foundCycles;
+            parsedHistory[year].forEach(([a, b]) => {
+              if (workingGraph[a]) {
+                workingGraph[a] = workingGraph[a].filter((n) => n !== b);
+              }
             });
-            return graph;
+            lastUsedYearIndex = i + 1;
+          } else {
+            break;
+          }
         }
 
-        function findAllHamiltonianCycles(graph, startNode) {
-            const cycles = [];
+        if (allValidCycles.length > 0) {
+          renderResult(
+            allValidCycles[Math.floor(Math.random() * allValidCycles.length)]
+          );
+          document.getElementById(
+            "buttonContainer"
+          ).innerHTML = `<button onclick="reroll()">🔁 Calculate Again</button>`;
+          document.getElementById("earlierRepeatsBtn").style.display = "inline";
+        } else {
+          document.getElementById("result").textContent =
+            "No Hamiltonian cycle found.";
+          drawGraph(baseGraph);
+        }
+      }
 
-            function dfs(path, visited) {
-                const current = path[path.length - 1];
-                if (path.length === Object.keys(graph).length) {
-                    if (graph[current].includes(startNode)) {
-                        cycles.push([...path, startNode]);
-                    }
-                    return;
-                }
-                for (const neighbor of shuffle([...graph[current]])) {
-                    if (!visited.has(neighbor)) {
-                        visited.add(neighbor);
-                        path.push(neighbor);
-                        dfs(path, visited);
-                        visited.delete(neighbor);
-                        path.pop();
-                    }
-                }
-            }
+      function allowLaterRepeats() {
+        const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a);
 
-            dfs([startNode], new Set([startNode]));
-            return cycles;
+        if (lastUsedYearIndex <= 0) {
+          alert("All years have been relaxed.");
+          return;
         }
 
-        function runHamiltonianProcess() {
-            baseGraph = buildGraph(parsedNames, parsedBadPairs);
-            workingGraph = JSON.parse(JSON.stringify(baseGraph));
-            const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a);
-            allValidCycles = [];
-            lastUsedYearIndex = 0;
+        // Step back one year (i.e., allow one newer year to repeat)
+        lastUsedYearIndex--;
 
-            for (let i = 0; i < historyYears.length; i++) {
-                const year = historyYears[i];
-                const foundCycles = findAllHamiltonianCycles(workingGraph, parsedNames[0]);
+        const relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
 
-                if (foundCycles.length > 0) {
-                    allValidCycles = foundCycles;
-                    parsedHistory[year].forEach(([a, b]) => {
-                        if (workingGraph[a]) {
-                            workingGraph[a] = workingGraph[a].filter(n => n !== b);
-                        }
-                    });
-                    lastUsedYearIndex = i + 1;
-                } else {
-                    break;
-                }
+        // Apply only history from years *after* the relaxed year
+        for (let i = lastUsedYearIndex; i < historyYears.length; i++) {
+          const year = historyYears[i];
+          parsedHistory[year].forEach(([a, b]) => {
+            if (relaxedGraph[a]) {
+              relaxedGraph[a] = relaxedGraph[a].filter((n) => n !== b);
             }
-
-            if (allValidCycles.length > 0) {
-                renderResult(allValidCycles[Math.floor(Math.random() * allValidCycles.length)]);
-                document.getElementById("buttonContainer").innerHTML =
-                    `<button onclick="reroll()">🔁 Calculate Again</button>`;
-                document.getElementById("earlierRepeatsBtn").style.display = "inline";
-            } else {
-                document.getElementById("result").textContent = "No Hamiltonian cycle found.";
-                drawGraph(baseGraph);
-            }
+          });
         }
 
-        function allowLaterRepeats() {
-            const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a);
+        const cycles = findAllHamiltonianCycles(relaxedGraph, parsedNames[0]);
+        if (cycles.length > 0) {
+          allValidCycles = cycles;
+          renderResult(cycles[Math.floor(Math.random() * cycles.length)]);
+        } else {
+          document.getElementById("result").textContent =
+            "No cycle found, even with more recent repeats allowed.";
+        }
+      }
 
-            if (lastUsedYearIndex <= 0) {
-                alert("All years have been relaxed.");
-                return;
-            }
+      function reroll() {
+        if (allValidCycles.length > 0) {
+          renderResult(
+            allValidCycles[Math.floor(Math.random() * allValidCycles.length)]
+          );
+        }
+      }
 
-            // Step back one year (i.e., allow one newer year to repeat)
-            lastUsedYearIndex--;
+      function renderResult(cycle) {
+        const start = parsedNames[0];
+        const rotated = (() => {
+          const base = cycle.slice(0, -1);
+          const idx = base.indexOf(start);
+          if (idx === -1) return cycle;
+          const rotated = [...base.slice(idx), ...base.slice(0, idx)];
+          return [...rotated, rotated[0]];
+        })();
 
-            const relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
+        const output = rotated
+          .slice(0, -1)
+          .map((giver, i) => `${giver} → ${rotated[i + 1]}`)
+          .join("\n");
 
-            // Apply only history from years *after* the relaxed year
-            for (let i = lastUsedYearIndex; i < historyYears.length; i++) {
-                const year = historyYears[i];
-                parsedHistory[year].forEach(([a, b]) => {
-                    if (relaxedGraph[a]) {
-                        relaxedGraph[a] = relaxedGraph[a].filter(n => n !== b);
-                    }
-                });
-            }
+        document.getElementById("result").innerHTML =
+          rotated
+            .slice(0, -1)
+            .map((giver, i) => `<div>${giver} → ${rotated[i + 1]}</div>`)
+            .join("") +
+          `<p><em>(${allValidCycles.length} possible cycles)</em></p>`;
 
-            const cycles = findAllHamiltonianCycles(relaxedGraph, parsedNames[0]);
-            if (cycles.length > 0) {
-                allValidCycles = cycles;
-                renderResult(cycles[Math.floor(Math.random() * cycles.length)]);
-            } else {
-                document.getElementById("result").textContent =
-                    "No cycle found, even with more recent repeats allowed.";
-            }
+        drawGraph(baseGraph, rotated);
+      }
+
+      function drawGraph(graph, highlightPath = []) {
+        const container = document.getElementById("graphOutput");
+        container.innerHTML = "";
+        const svg = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "svg"
+        );
+        svg.setAttribute("width", "100%");
+        svg.setAttribute("height", "500");
+        svg.setAttribute("viewBox", "0 0 500 500");
+
+        const radius = 200;
+        const centerX = 250;
+        const centerY = 250;
+        const nodeRadius = 20;
+
+        const nodes = Object.keys(graph);
+        const positions = {};
+
+        nodes.forEach((node, i) => {
+          const angle = (2 * Math.PI * i) / nodes.length;
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+          positions[node] = { x, y };
+        });
+
+        // Gray background edges
+        nodes.forEach((from) => {
+          graph[from].forEach((to) => {
+            const line = document.createElementNS(
+              "http://www.w3.org/2000/svg",
+              "line"
+            );
+            line.setAttribute("x1", positions[from].x);
+            line.setAttribute("y1", positions[from].y);
+            line.setAttribute("x2", positions[to].x);
+            line.setAttribute("y2", positions[to].y);
+            line.setAttribute("stroke", "#ccc");
+            svg.appendChild(line);
+          });
+        });
+
+        // Arrowhead definition (smaller)
+        const defs = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "defs"
+        );
+        const marker = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "marker"
+        );
+        marker.setAttribute("id", "arrowhead");
+        marker.setAttribute("markerWidth", "6");
+        marker.setAttribute("markerHeight", "4");
+        marker.setAttribute("refX", "6");
+        marker.setAttribute("refY", "2");
+        marker.setAttribute("orient", "auto");
+        const arrowPath = document.createElementNS(
+          "http://www.w3.org/2000/svg",
+          "path"
+        );
+        arrowPath.setAttribute("d", "M0,0 L6,2 L0,4 Z");
+        arrowPath.setAttribute("fill", "red");
+        marker.appendChild(arrowPath);
+        defs.appendChild(marker);
+        svg.appendChild(defs);
+
+        // Red arrows (drawn after gray edges, before nodes)
+        for (let i = 0; i < highlightPath.length - 1; i++) {
+          const from = highlightPath[i];
+          const to = highlightPath[i + 1];
+
+          const dx = positions[to].x - positions[from].x;
+          const dy = positions[to].y - positions[from].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          const offsetX = (dx / dist) * nodeRadius;
+          const offsetY = (dy / dist) * nodeRadius;
+
+          const x1 = positions[from].x + offsetX;
+          const y1 = positions[from].y + offsetY;
+          const x2 = positions[to].x - offsetX;
+          const y2 = positions[to].y - offsetY;
+
+          const line = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+          );
+          line.setAttribute("x1", x1);
+          line.setAttribute("y1", y1);
+          line.setAttribute("x2", x2);
+          line.setAttribute("y2", y2);
+          line.setAttribute("stroke", "red");
+          line.setAttribute("stroke-width", "3");
+          line.setAttribute("marker-end", "url(#arrowhead)");
+          svg.appendChild(line);
         }
 
+        // Draw nodes
+        nodes.forEach((node) => {
+          const { x, y } = positions[node];
+          const circle = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+          );
+          circle.setAttribute("cx", x);
+          circle.setAttribute("cy", y);
+          circle.setAttribute("r", nodeRadius);
+          circle.setAttribute("fill", "#d9e9f9");
+          svg.appendChild(circle);
 
+          const text = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "text"
+          );
+          text.setAttribute("x", x);
+          text.setAttribute("y", y + 5);
+          text.setAttribute("text-anchor", "middle");
+          text.textContent = node;
+          svg.appendChild(text);
+        });
 
-        function reroll() {
-            if (allValidCycles.length > 0) {
-                renderResult(allValidCycles[Math.floor(Math.random() * allValidCycles.length)]);
-            }
+        container.appendChild(svg);
+      }
+
+      function findMaximalInterestingCycles() {
+        const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a); // newest to oldest
+        let relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
+        let foundCycles = [];
+        let earliestYearKept = historyYears.length;
+
+        // Try relaxing more history until we find ≥ 2 cycles
+        for (let i = 0; i <= historyYears.length; i++) {
+          // Remove history for most recent i years
+          relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
+
+          for (let j = i; j < historyYears.length; j++) {
+            const year = historyYears[j];
+            parsedHistory[year].forEach(([a, b]) => {
+              if (relaxedGraph[a]) {
+                relaxedGraph[a] = relaxedGraph[a].filter((n) => n !== b);
+              }
+            });
+          }
+
+          const cycles = findAllHamiltonianCycles(relaxedGraph, parsedNames[0]);
+          if (cycles.length > 1) {
+            foundCycles = cycles;
+            earliestYearKept = i;
+            break;
+          }
         }
 
-        function renderResult(cycle) {
-            const start = parsedNames[0];
-            const rotated = (() => {
-                const base = cycle.slice(0, -1);
-                const idx = base.indexOf(start);
-                if (idx === -1) return cycle;
-                const rotated = [...base.slice(idx), ...base.slice(0, idx)];
-                return [...rotated, rotated[0]];
-            })();
-
-            const output = rotated.slice(0, -1).map((giver, i) =>
-                `${giver} → ${rotated[i + 1]}`
-            ).join("\n");
-
-            document.getElementById("result").textContent = output + `\n\n(${allValidCycles.length} possible cycles)`;
-            drawGraph(baseGraph, rotated);
+        if (foundCycles.length > 0) {
+          allValidCycles = foundCycles;
+          lastUsedYearIndex = earliestYearKept;
+          renderResult(
+            foundCycles[Math.floor(Math.random() * foundCycles.length)]
+          );
+          document.getElementById("result").textContent += `\n\n(${
+            foundCycles.length
+          } valid cycles)\nNo repeats from ${
+            historyYears[earliestYearKept] || "earliest year"
+          } onward.`;
+          document.getElementById(
+            "buttonContainer"
+          ).innerHTML = `<button onclick="reroll()">🔁 Calculate Again</button>`;
+          document.getElementById("earlierRepeatsBtn").style.display = "none";
+        } else {
+          document.getElementById("result").textContent =
+            "No Hamiltonian cycle could be found with this history.";
         }
-
-        function drawGraph(graph, highlightPath = []) {
-                const container = document.getElementById("graphOutput");
-                container.innerHTML = "";
-                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-                svg.setAttribute("width", "100%");
-                svg.setAttribute("height", "500");
-
-                const radius = 200;
-                const centerX = 250;
-                const centerY = 250;
-                const nodeRadius = 20;
-
-                const nodes = Object.keys(graph);
-                const positions = {};
-
-                nodes.forEach((node, i) => {
-                    const angle = (2 * Math.PI * i) / nodes.length;
-                    const x = centerX + radius * Math.cos(angle);
-                    const y = centerY + radius * Math.sin(angle);
-                    positions[node] = { x, y };
-                });
-
-                // Gray background edges
-                nodes.forEach(from => {
-                    graph[from].forEach(to => {
-                        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                        line.setAttribute("x1", positions[from].x);
-                        line.setAttribute("y1", positions[from].y);
-                        line.setAttribute("x2", positions[to].x);
-                        line.setAttribute("y2", positions[to].y);
-                        line.setAttribute("stroke", "#ccc");
-                        svg.appendChild(line);
-                    });
-                });
-
-                // Arrowhead definition (smaller)
-                const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-                const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-                marker.setAttribute("id", "arrowhead");
-                marker.setAttribute("markerWidth", "6");
-                marker.setAttribute("markerHeight", "4");
-                marker.setAttribute("refX", "6");
-                marker.setAttribute("refY", "2");
-                marker.setAttribute("orient", "auto");
-                const arrowPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                arrowPath.setAttribute("d", "M0,0 L6,2 L0,4 Z");
-                arrowPath.setAttribute("fill", "red");
-                marker.appendChild(arrowPath);
-                defs.appendChild(marker);
-                svg.appendChild(defs);
-
-                // Red arrows (drawn after gray edges, before nodes)
-                for (let i = 0; i < highlightPath.length - 1; i++) {
-                    const from = highlightPath[i];
-                    const to = highlightPath[i + 1];
-
-                    const dx = positions[to].x - positions[from].x;
-                    const dy = positions[to].y - positions[from].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    const offsetX = (dx / dist) * nodeRadius;
-                    const offsetY = (dy / dist) * nodeRadius;
-
-                    const x1 = positions[from].x + offsetX;
-                    const y1 = positions[from].y + offsetY;
-                    const x2 = positions[to].x - offsetX;
-                    const y2 = positions[to].y - offsetY;
-
-                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", x1);
-                    line.setAttribute("y1", y1);
-                    line.setAttribute("x2", x2);
-                    line.setAttribute("y2", y2);
-                    line.setAttribute("stroke", "red");
-                    line.setAttribute("stroke-width", "3");
-                    line.setAttribute("marker-end", "url(#arrowhead)");
-                    svg.appendChild(line);
-                }
-
-                // Draw nodes
-                nodes.forEach(node => {
-                    const { x, y } = positions[node];
-                    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    circle.setAttribute("cx", x);
-                    circle.setAttribute("cy", y);
-                    circle.setAttribute("r", nodeRadius);
-                    circle.setAttribute("fill", "#d9e9f9");
-                    svg.appendChild(circle);
-
-                    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", x);
-                    text.setAttribute("y", y + 5);
-                    text.setAttribute("text-anchor", "middle");
-                    text.textContent = node;
-                    svg.appendChild(text);
-                });
-
-                container.appendChild(svg);
-            }
-
-
-        function findMaximalInterestingCycles() {
-            const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a); // newest to oldest
-            let relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
-            let foundCycles = [];
-            let earliestYearKept = historyYears.length;
-
-            // Try relaxing more history until we find ≥ 2 cycles
-            for (let i = 0; i <= historyYears.length; i++) {
-                // Remove history for most recent i years
-                relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
-
-                for (let j = i; j < historyYears.length; j++) {
-                    const year = historyYears[j];
-                    parsedHistory[year].forEach(([a, b]) => {
-                        if (relaxedGraph[a]) {
-                            relaxedGraph[a] = relaxedGraph[a].filter(n => n !== b);
-                        }
-                    });
-                }
-
-                const cycles = findAllHamiltonianCycles(relaxedGraph, parsedNames[0]);
-                if (cycles.length > 1) {
-                    foundCycles = cycles;
-                    earliestYearKept = i;
-                    break;
-                }
-            }
-
-            if (foundCycles.length > 0) {
-                allValidCycles = foundCycles;
-                lastUsedYearIndex = earliestYearKept;
-                renderResult(foundCycles[Math.floor(Math.random() * foundCycles.length)]);
-                document.getElementById("result").textContent += `\n\n(${foundCycles.length} valid cycles)\nNo repeats from ${historyYears[earliestYearKept] || "earliest year"} onward.`;
-                document.getElementById("buttonContainer").innerHTML = `<button onclick="reroll()">🔁 Calculate Again</button>`;
-                document.getElementById("earlierRepeatsBtn").style.display = "none";
-            } else {
-                document.getElementById("result").textContent = "No Hamiltonian cycle could be found with this history.";
-            }
-        }
-
+      }
     </script>
-</body>
-
+  </body>
 </html>
