@@ -1,151 +1,402 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hamiltonian Gift Exchange</title>
-  <style>
-    body { font-family: sans-serif; margin: 2rem; }
-    input[type="file"], textarea, button { display: block; margin-bottom: 1rem; width: 100%; max-width: 500px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-    .box { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; border-radius: 5px; }
-  </style>
+    <meta charset="UTF-8" />
+    <title>Hamiltonian Gift Exchange</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+        }
+
+        .column {
+            float: left;
+            width: 30%;
+            padding: 10px;
+            overflow-y: auto;
+            max-height: 200px;
+        }
+
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        #graphOutput {
+            margin-top: 20px;
+        }
+
+        pre {
+            white-space: pre-wrap;
+        }
+    </style>
 </head>
+
 <body>
-  <h1>🎁 Hamiltonian Gift Exchange</h1>
+    <h1>Hamiltonian Gift Exchange</h1>
 
-  <!-- Upload and Manual Entry Code Omitted for Brevity -->
+    <div class="row">
+        <div class="column">
+            <h3>Names</h3>
+            <textarea id="namesInput">A, B, C, D, E, F, G, H</textarea><br />
+            <input type="file" id="namesFile" accept=".csv" />
+        </div>
+        <div class="column">
+            <h3>Bad Pairs</h3>
+            <textarea id="badpairsInput">A,B
+C,D
+E,F
+G,H</textarea><br />
+            <input type="file" id="badpairsFile" accept=".csv" />
+        </div>
+        <div class="column">
+            <h3>History</h3>
+            <textarea id="historyInput">2023,
+A,B
+B,C
+C,D
+D,E
+E,F
+F,G
+G,H
+H,A</textarea><br />
+            <input type="file" id="historyFile" accept=".csv" />
+        </div>
+    </div>
 
-  <script>
-    let parsedNames = [];
-    let parsedBadPairs = [];
-    let parsedHistory = {};
+    <button onclick="loadAllCSVs()">📂 Load</button>
+    <span id="buttonContainer">
+        <button onclick="runHamiltonianProcess()">Calculate Exchange</button>
+    </span>
+    <button onclick="allowLaterRepeats()" id="earlierRepeatsBtn" style="display:none;">Allow Later Repeats</button>
+    <button onclick="findMaximalInterestingCycles()">Calculate Interesting Exchange</button>
 
-    function parseHistoryText(text) {
-      const lines = text.trim().split(/\r?\n/);
-      const history = {};
-      let currentYear = null;
+    <h3>Result</h3>
+    <pre id="result"></pre>
+    <div id="graphOutput"></div>
 
-      for (const line of lines) {
-        const parts = line.split(',').map(s => s.trim());
-        const yearMatch = parts.length === 1 ? parts[0] : (parts.length === 2 && /^\d{4},?$/.test(parts[0]) && parts[1] === '') ? parts[0] : null;
+    <script>
+        let parsedNames = [];
+        let parsedBadPairs = [];
+        let parsedHistory = {};
+        let allValidCycles = [];
+        let baseGraph = {};
+        let workingGraph = {};
+        let lastUsedYearIndex = 0;
 
-        if (yearMatch && /^\d{4}$/.test(yearMatch.replace(/,$/, ''))) {
-          currentYear = yearMatch.replace(/,$/, '');
-          history[currentYear] = [];
-        } else if (parts.length === 2 && currentYear) {
-          history[currentYear].push([parts[0], parts[1]]);
+        function parseCSVText(text) {
+            return text.trim().split("\n").map(line => line.split(",").map(s => s.trim()));
         }
-      }
 
-      return history;
-    }
-
-    function buildGraph(names, badpairs) {
-      const graph = {};
-      names.forEach(name => {
-        graph[name] = names.filter(other => other !== name);
-      });
-      badpairs.forEach(([a, b]) => {
-        if (graph[a]) graph[a] = graph[a].filter(x => x !== b);
-      });
-      return graph;
-    }
-
-    function findHamiltonianPath(graph, path = [], visited = new Set()) {
-      if (path.length === Object.keys(graph).length) return path;
-
-      const last = path[path.length - 1];
-      const candidates = last ? graph[last] : Object.keys(graph);
-
-      for (const next of shuffle([...candidates])) {
-        if (!visited.has(next)) {
-          visited.add(next);
-          path.push(next);
-          const result = findHamiltonianPath(graph, path, visited);
-          if (result) return result;
-          visited.delete(next);
-          path.pop();
+        function parseHistoryText(text) {
+            const lines = text.trim().split("\n");
+            const history = {};
+            let currentYear = null;
+            for (let line of lines) {
+                if (/^\d{4},?$/.test(line.trim())) {
+                    currentYear = line.replace(",", "").trim();
+                    history[currentYear] = [];
+                } else if (currentYear) {
+                    const [a, b] = line.split(",").map(s => s.trim());
+                    if (a && b) history[currentYear].push([a, b]);
+                }
+            }
+            return history;
         }
-      }
-      return null;
-    }
 
-    function shuffle(arr) {
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
-
-    function runHamiltonianProcess() {
-      let graph = buildGraph(parsedNames, parsedBadPairs);
-      const historyYears = Object.keys(parsedHistory).sort().reverse();
-
-      let path = null;
-      for (let i = 0; i <= historyYears.length; i++) {
-        const attempt = findHamiltonianPath(graph);
-        if (!attempt) {
-          alert("Best possible Hamiltonian Path:\n" + path.join(" → "));
-          return;
+        function readFile(input, callback) {
+            if (input.files.length === 0) return;
+            const reader = new FileReader();
+            reader.onload = e => callback(e.target.result);
+            reader.readAsText(input.files[0]);
         }
-        path = attempt;
-        if (i < historyYears.length) {
-          const year = historyYears[i];
-          parsedHistory[year].forEach(([a, b]) => {
-            if (graph[a]) graph[a] = graph[a].filter(x => x !== b);
-          });
+
+        function loadAllCSVs() {
+            parsedNames = document.getElementById("namesInput").value.split(",").map(x => x.trim());
+            parsedBadPairs = parseCSVText(document.getElementById("badpairsInput").value);
+            parsedHistory = parseHistoryText(document.getElementById("historyInput").value);
+
+            readFile(document.getElementById("namesFile"), text => {
+                parsedNames = text.split(",").map(x => x.trim());
+            });
+            readFile(document.getElementById("badpairsFile"), text => {
+                parsedBadPairs = parseCSVText(text);
+            });
+            readFile(document.getElementById("historyFile"), text => {
+                parsedHistory = parseHistoryText(text);
+            });
         }
-      }
-      alert("Final Hamiltonian Path:\n" + path.join(" → "));
-    }
 
-    function parseCSVs() {
-      const namesFile = document.getElementById('namesCSV').files[0];
-      const badpairsFile = document.getElementById('badpairsCSV').files[0];
-      const historyFile = document.getElementById('historyCSV').files[0];
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
-      if (!namesFile || !badpairsFile || !historyFile) {
-        alert("Please upload all three CSV files.");
-        return;
-      }
+        function buildGraph(names, badPairs) {
+            const graph = {};
+            names.forEach(name => {
+                graph[name] = names.filter(n =>
+                    n !== name &&
+                    !badPairs.some(([a, b]) =>
+                        (a === name && b === n) || (a === n && b === name)
+                    )
+                );
+            });
+            return graph;
+        }
 
-      const reader1 = new FileReader();
-      const reader2 = new FileReader();
-      const reader3 = new FileReader();
+        function findAllHamiltonianCycles(graph, startNode) {
+            const cycles = [];
 
-      reader1.onload = function (e) {
-        parsedNames = e.target.result.trim().split(',').map(s => s.trim());
-        document.getElementById('outputNames').textContent = parsedNames.join("\n");
-      };
+            function dfs(path, visited) {
+                const current = path[path.length - 1];
+                if (path.length === Object.keys(graph).length) {
+                    if (graph[current].includes(startNode)) {
+                        cycles.push([...path, startNode]);
+                    }
+                    return;
+                }
+                for (const neighbor of shuffle([...graph[current]])) {
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
+                        path.push(neighbor);
+                        dfs(path, visited);
+                        visited.delete(neighbor);
+                        path.pop();
+                    }
+                }
+            }
 
-      reader2.onload = function (e) {
-        parsedBadPairs = e.target.result.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
-        document.getElementById('outputBadpairs').textContent = parsedBadPairs.map(p => p.join(" → ")).join("\n");
-      };
+            dfs([startNode], new Set([startNode]));
+            return cycles;
+        }
 
-      reader3.onload = function (e) {
-        parsedHistory = parseHistoryText(e.target.result);
-        document.getElementById('outputHistory').textContent = formatHistoryObject(parsedHistory);
-        runHamiltonianProcess();
-      };
+        function runHamiltonianProcess() {
+            baseGraph = buildGraph(parsedNames, parsedBadPairs);
+            workingGraph = JSON.parse(JSON.stringify(baseGraph));
+            const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a);
+            allValidCycles = [];
+            lastUsedYearIndex = 0;
 
-      reader1.readAsText(namesFile);
-      reader2.readAsText(badpairsFile);
-      reader3.readAsText(historyFile);
-    }
+            for (let i = 0; i < historyYears.length; i++) {
+                const year = historyYears[i];
+                const foundCycles = findAllHamiltonianCycles(workingGraph, parsedNames[0]);
 
-    function parseManual() {
-      parsedNames = document.getElementById('namesManual').value.split(',').map(s => s.trim());
-      parsedBadPairs = document.getElementById('badpairsManual').value.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
-      parsedHistory = parseHistoryText(document.getElementById('historyManual').value);
+                if (foundCycles.length > 0) {
+                    allValidCycles = foundCycles;
+                    parsedHistory[year].forEach(([a, b]) => {
+                        if (workingGraph[a]) {
+                            workingGraph[a] = workingGraph[a].filter(n => n !== b);
+                        }
+                    });
+                    lastUsedYearIndex = i + 1;
+                } else {
+                    break;
+                }
+            }
 
-      document.getElementById('outputNames').textContent = parsedNames.join("\n");
-      document.getElementById('outputBadpairs').textContent = parsedBadPairs.map(p => p.join(" → ")).join("\n");
-      document.getElementById('outputHistory').textContent = formatHistoryObject(parsedHistory);
-      runHamiltonianProcess();
-    }
-  </script>
+            if (allValidCycles.length > 0) {
+                renderResult(allValidCycles[Math.floor(Math.random() * allValidCycles.length)]);
+                document.getElementById("buttonContainer").innerHTML =
+                    `<button onclick="reroll()">🔁 Calculate Again</button>`;
+                document.getElementById("earlierRepeatsBtn").style.display = "inline";
+            } else {
+                document.getElementById("result").textContent = "No Hamiltonian cycle found.";
+                drawGraph(baseGraph);
+            }
+        }
+
+        function allowLaterRepeats() {
+                const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a);
+
+                if (lastUsedYearIndex <= 0) {
+                    alert("All years have been relaxed.");
+                    return;
+                }
+
+                // Step back one year (i.e., allow one newer year to repeat)
+                lastUsedYearIndex--;
+
+                const relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
+
+                // Apply only history from years *after* the relaxed year
+                for (let i = lastUsedYearIndex; i < historyYears.length; i++) {
+                    const year = historyYears[i];
+                    parsedHistory[year].forEach(([a, b]) => {
+                        if (relaxedGraph[a]) {
+                            relaxedGraph[a] = relaxedGraph[a].filter(n => n !== b);
+                        }
+                    });
+                }
+
+                const cycles = findAllHamiltonianCycles(relaxedGraph, parsedNames[0]);
+                if (cycles.length > 0) {
+                    allValidCycles = cycles;
+                    renderResult(cycles[Math.floor(Math.random() * cycles.length)]);
+                } else {
+                    document.getElementById("result").textContent =
+                        "No cycle found, even with more recent repeats allowed.";
+                }
+            }
+
+
+
+        function reroll() {
+            if (allValidCycles.length > 0) {
+                renderResult(allValidCycles[Math.floor(Math.random() * allValidCycles.length)]);
+            }
+        }
+
+        function renderResult(cycle) {
+            const start = parsedNames[0];
+            const rotated = (() => {
+                const base = cycle.slice(0, -1);
+                const idx = base.indexOf(start);
+                if (idx === -1) return cycle;
+                const rotated = [...base.slice(idx), ...base.slice(0, idx)];
+                return [...rotated, rotated[0]];
+            })();
+
+            const output = rotated.slice(0, -1).map((giver, i) =>
+                `${giver} → ${rotated[i + 1]}`
+            ).join("\n");
+
+            document.getElementById("result").textContent = output + `\n\n(${allValidCycles.length} possible cycles)`;
+            drawGraph(baseGraph, rotated);
+        }
+
+        function drawGraph(graph, highlightPath = []) {
+            const container = document.getElementById("graphOutput");
+            container.innerHTML = "";
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "500");
+            svg.setAttribute("height", "500");
+            const radius = 200;
+            const centerX = 250;
+            const centerY = 250;
+            const nodes = Object.keys(graph);
+            const positions = {};
+            nodes.forEach((node, i) => {
+                const angle = (2 * Math.PI * i) / nodes.length;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                positions[node] = { x, y };
+            });
+
+            // gray edges
+            nodes.forEach(from => {
+                graph[from].forEach(to => {
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", positions[from].x);
+                    line.setAttribute("y1", positions[from].y);
+                    line.setAttribute("x2", positions[to].x);
+                    line.setAttribute("y2", positions[to].y);
+                    line.setAttribute("stroke", "#ccc");
+                    svg.appendChild(line);
+                });
+            });
+
+            const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+            const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+            marker.setAttribute("id", "arrowhead");
+            marker.setAttribute("markerWidth", "10");
+            marker.setAttribute("markerHeight", "7");
+            marker.setAttribute("refX", "10");
+            marker.setAttribute("refY", "3.5");
+            marker.setAttribute("orient", "auto");
+            const arrowPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            arrowPath.setAttribute("d", "M0,0 L10,3.5 L0,7 Z");
+            arrowPath.setAttribute("fill", "red");
+            marker.appendChild(arrowPath);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+
+            // red path
+            for (let i = 0; i < highlightPath.length - 1; i++) {
+                const from = highlightPath[i];
+                const to = highlightPath[i + 1];
+                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", positions[from].x);
+                line.setAttribute("y1", positions[from].y);
+                line.setAttribute("x2", positions[to].x);
+                line.setAttribute("y2", positions[to].y);
+                line.setAttribute("stroke", "red");
+                line.setAttribute("stroke-width", "3");
+                line.setAttribute("marker-end", "url(#arrowhead)");
+                svg.appendChild(line);
+            }
+
+            // nodes
+            nodes.forEach(node => {
+                const { x, y } = positions[node];
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", x);
+                circle.setAttribute("cy", y);
+                circle.setAttribute("r", 20);
+                circle.setAttribute("fill", "#d9e9f9");
+                svg.appendChild(circle);
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", x);
+                text.setAttribute("y", y + 5);
+                text.setAttribute("text-anchor", "middle");
+                text.textContent = node;
+                svg.appendChild(text);
+            });
+
+            container.appendChild(svg);
+        }
+
+        function findMaximalInterestingCycles() {
+                const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a); // newest to oldest
+                let relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
+                let foundCycles = [];
+                let earliestYearKept = historyYears.length;
+
+                // Try relaxing more history until we find ≥ 2 cycles
+                for (let i = 0; i <= historyYears.length; i++) {
+                    // Remove history for most recent i years
+                    relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
+
+                    for (let j = i; j < historyYears.length; j++) {
+                        const year = historyYears[j];
+                        parsedHistory[year].forEach(([a, b]) => {
+                            if (relaxedGraph[a]) {
+                                relaxedGraph[a] = relaxedGraph[a].filter(n => n !== b);
+                            }
+                        });
+                    }
+
+                    const cycles = findAllHamiltonianCycles(relaxedGraph, parsedNames[0]);
+                    if (cycles.length > 1) {
+                        foundCycles = cycles;
+                        earliestYearKept = i;
+                        break;
+                    }
+                }
+
+                if (foundCycles.length > 0) {
+                    allValidCycles = foundCycles;
+                    lastUsedYearIndex = earliestYearKept;
+                    renderResult(foundCycles[Math.floor(Math.random() * foundCycles.length)]);
+                    document.getElementById("result").textContent += `\n\n(${foundCycles.length} valid cycles)\nNo repeats from ${historyYears[earliestYearKept] || "earliest year"} onward.`;
+                    document.getElementById("buttonContainer").innerHTML = `<button onclick="reroll()">🔁 Calculate Again</button>`;
+                    document.getElementById("earlierRepeatsBtn").style.display = "none";
+                } else {
+                    document.getElementById("result").textContent = "No Hamiltonian cycle could be found with this history.";
+                }
+            }
+
+    </script>
 </body>
+
 </html>
