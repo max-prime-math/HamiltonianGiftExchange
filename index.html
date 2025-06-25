@@ -14,47 +14,93 @@
 <body>
   <h1>🎁 Hamiltonian Gift Exchange</h1>
 
-  <h2>Upload CSV Files</h2>
-  <label>Names CSV (e.g., A, B, C, D):</label>
-  <input type="file" id="namesCSV" accept=".csv" />
-
-  <label>Bad Pairs CSV (e.g., A,B on each line):</label>
-  <input type="file" id="badpairsCSV" accept=".csv" />
-
-  <label>History CSV (e.g., A,B to represent A gave to B):</label>
-  <input type="file" id="historyCSV" accept=".csv" />
-
-  <button onclick="parseCSVs()">Parse CSV Files</button>
-
-  <h2>Or Enter Data Manually</h2>
-  <label>Names (comma-separated):</label>
-  <textarea id="namesManual" rows="2" placeholder="A, B, C, D"></textarea>
-
-  <label>Bad Pairs (one pair per line, comma-separated):</label>
-  <textarea id="badpairsManual" rows="6" placeholder="A,B\nC,D"></textarea>
-
-  <label>History (one pair per line, comma-separated):</label>
-  <textarea id="historyManual" rows="6" placeholder="A,B\nB,C"></textarea>
-
-  <button onclick="parseManual()">Parse Manual Input</button>
-
-  <h2>Parsed Data</h2>
-  <div class="grid">
-    <div class="box">
-      <h3>Names</h3>
-      <pre id="outputNames"></pre>
-    </div>
-    <div class="box">
-      <h3>Bad Pairs</h3>
-      <pre id="outputBadpairs"></pre>
-    </div>
-    <div class="box">
-      <h3>History</h3>
-      <pre id="outputHistory"></pre>
-    </div>
-  </div>
+  <!-- Upload and Manual Entry Code Omitted for Brevity -->
 
   <script>
+    let parsedNames = [];
+    let parsedBadPairs = [];
+    let parsedHistory = {};
+
+    function parseHistoryText(text) {
+      const lines = text.trim().split(/\r?\n/);
+      const history = {};
+      let currentYear = null;
+
+      for (const line of lines) {
+        const parts = line.split(',').map(s => s.trim());
+        const yearMatch = parts.length === 1 ? parts[0] : (parts.length === 2 && /^\d{4},?$/.test(parts[0]) && parts[1] === '') ? parts[0] : null;
+
+        if (yearMatch && /^\d{4}$/.test(yearMatch.replace(/,$/, ''))) {
+          currentYear = yearMatch.replace(/,$/, '');
+          history[currentYear] = [];
+        } else if (parts.length === 2 && currentYear) {
+          history[currentYear].push([parts[0], parts[1]]);
+        }
+      }
+
+      return history;
+    }
+
+    function buildGraph(names, badpairs) {
+      const graph = {};
+      names.forEach(name => {
+        graph[name] = names.filter(other => other !== name);
+      });
+      badpairs.forEach(([a, b]) => {
+        if (graph[a]) graph[a] = graph[a].filter(x => x !== b);
+      });
+      return graph;
+    }
+
+    function findHamiltonianPath(graph, path = [], visited = new Set()) {
+      if (path.length === Object.keys(graph).length) return path;
+
+      const last = path[path.length - 1];
+      const candidates = last ? graph[last] : Object.keys(graph);
+
+      for (const next of shuffle([...candidates])) {
+        if (!visited.has(next)) {
+          visited.add(next);
+          path.push(next);
+          const result = findHamiltonianPath(graph, path, visited);
+          if (result) return result;
+          visited.delete(next);
+          path.pop();
+        }
+      }
+      return null;
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function runHamiltonianProcess() {
+      let graph = buildGraph(parsedNames, parsedBadPairs);
+      const historyYears = Object.keys(parsedHistory).sort().reverse();
+
+      let path = null;
+      for (let i = 0; i <= historyYears.length; i++) {
+        const attempt = findHamiltonianPath(graph);
+        if (!attempt) {
+          alert("Best possible Hamiltonian Path:\n" + path.join(" → "));
+          return;
+        }
+        path = attempt;
+        if (i < historyYears.length) {
+          const year = historyYears[i];
+          parsedHistory[year].forEach(([a, b]) => {
+            if (graph[a]) graph[a] = graph[a].filter(x => x !== b);
+          });
+        }
+      }
+      alert("Final Hamiltonian Path:\n" + path.join(" → "));
+    }
+
     function parseCSVs() {
       const namesFile = document.getElementById('namesCSV').files[0];
       const badpairsFile = document.getElementById('badpairsCSV').files[0];
@@ -65,25 +111,24 @@
         return;
       }
 
-      let names = [], badpairs = [], history = [];
-
       const reader1 = new FileReader();
       const reader2 = new FileReader();
       const reader3 = new FileReader();
 
       reader1.onload = function (e) {
-        names = e.target.result.trim().split(',').map(s => s.trim());
-        document.getElementById('outputNames').textContent = names.join("\n");
+        parsedNames = e.target.result.trim().split(',').map(s => s.trim());
+        document.getElementById('outputNames').textContent = parsedNames.join("\n");
       };
 
       reader2.onload = function (e) {
-        badpairs = e.target.result.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
-        document.getElementById('outputBadpairs').textContent = badpairs.map(p => p.join(" → ")).join("\n");
+        parsedBadPairs = e.target.result.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
+        document.getElementById('outputBadpairs').textContent = parsedBadPairs.map(p => p.join(" → ")).join("\n");
       };
 
       reader3.onload = function (e) {
-        history = e.target.result.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
-        document.getElementById('outputHistory').textContent = history.map(p => p.join(" → ")).join("\n");
+        parsedHistory = parseHistoryText(e.target.result);
+        document.getElementById('outputHistory').textContent = formatHistoryObject(parsedHistory);
+        runHamiltonianProcess();
       };
 
       reader1.readAsText(namesFile);
@@ -92,13 +137,14 @@
     }
 
     function parseManual() {
-      const names = document.getElementById('namesManual').value.split(',').map(s => s.trim());
-      const badpairs = document.getElementById('badpairsManual').value.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
-      const history = document.getElementById('historyManual').value.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
+      parsedNames = document.getElementById('namesManual').value.split(',').map(s => s.trim());
+      parsedBadPairs = document.getElementById('badpairsManual').value.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
+      parsedHistory = parseHistoryText(document.getElementById('historyManual').value);
 
-      document.getElementById('outputNames').textContent = names.join("\n");
-      document.getElementById('outputBadpairs').textContent = badpairs.map(p => p.join(" → ")).join("\n");
-      document.getElementById('outputHistory').textContent = history.map(p => p.join(" → ")).join("\n");
+      document.getElementById('outputNames').textContent = parsedNames.join("\n");
+      document.getElementById('outputBadpairs').textContent = parsedBadPairs.map(p => p.join(" → ")).join("\n");
+      document.getElementById('outputHistory').textContent = formatHistoryObject(parsedHistory);
+      runHamiltonianProcess();
     }
   </script>
 </body>
