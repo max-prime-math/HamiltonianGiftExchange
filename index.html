@@ -163,7 +163,7 @@ G,H</textarea
       <div class="column">
         <h3>History</h3>
         <textarea id="historyInput">
-2023,
+2023
 A,B
 B,C
 C,D
@@ -171,24 +171,32 @@ D,E
 E,F
 F,G
 G,H
-H,A</textarea
+H,A
+2024
+A,C
+C,E 
+E,G
+G,B 
+B,D 
+D,F 
+F,H</textarea
         >
         <input type="file" id="historyFile" accept=".csv" />
       </div>
     </div>
 
     <div class="button-group">
-      <button onclick="loadAllCSVs()">📂 Load</button>
+      <button onclick="loadAllCSVs()">Load</button>
       <span id="buttonContainer">
         <button onclick="runHamiltonianProcess()">Calculate Exchange</button>
       </span>
-      <button
+      <!-- <button
         onclick="allowLaterRepeats()"
         id="earlierRepeatsBtn"
         style="display: none"
       >
         Allow Later Repeats
-      </button>
+      </button> -->
       <!-- <button onclick="findMaximalInterestingCycles()">
         Calculate Interesting Exchange
       </button> -->
@@ -197,7 +205,7 @@ H,A</textarea
     <div class="output-section">
       <h3>Result</h3>
       <div id="result">
-        <h3>📘 How to Use</h3>
+        <h3>Read Me</h3>
         <ul>
           <li>
             <strong>Names</strong>
@@ -207,8 +215,7 @@ H,A</textarea
           <li>
             <strong>Bad Pairs</strong>
             <br />
-            Enter pairs (one per line) of people who should never exchange (e.g.
-            <code>A,B</code>).
+            Enter pairs of people who should never exchange.
           </li>
           <li>
             <strong>History</strong>
@@ -217,20 +224,26 @@ H,A</textarea
             by the pairs.
           </li>
         </ul>
-        <p><strong>Example History Format:</strong></p>
-        <pre>
-2023,
-Alice,Bob
-Bob,Charlie
-...
-  </pre
-        >
-        <p>📂 Click <strong>Load</strong> to parse your data.</p>
+        <p>Click <strong>Load</strong> to parse your data.</p>
         <p>
-          ▶️ Click <strong>Calculate Exchange</strong> to generate a valid gift
+          Click <strong>Calculate Exchange</strong> to generate a valid gift
           cycle.
         </p>
+        <button
+          onclick="downloadUpdatedHistory()"
+          id="downloadHistoryBtn"
+          style="display: none"
+        >
+          📥 Download Updated History
+        </button>
       </div>
+      <button
+        onclick="downloadUpdatedHistory()"
+        id="downloadHistoryBtn"
+        style="display: none"
+      >
+        📥 Download Updated History
+      </button>
 
       <div id="graphOutput"></div>
     </div>
@@ -371,77 +384,80 @@ Bob,Charlie
 
       function runHamiltonianProcess() {
         baseGraph = buildGraph(parsedNames, parsedBadPairs);
-        workingGraph = JSON.parse(JSON.stringify(baseGraph));
-        const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a);
-        allValidCycles = [];
-        lastUsedYearIndex = 0;
+        const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a); // latest to earliest
+        let graph = JSON.parse(JSON.stringify(baseGraph));
+        let removedYears = [];
+        let finalCycles = [];
+        let repeatedYear = null;
 
-        for (let i = 0; i < historyYears.length; i++) {
-          const year = historyYears[i];
-          const foundCycles = findAllHamiltonianCycles(
-            workingGraph,
-            parsedNames[0]
-          );
-
-          if (foundCycles.length > 0) {
-            allValidCycles = foundCycles;
-            parsedHistory[year].forEach(([a, b]) => {
-              if (workingGraph[a]) {
-                workingGraph[a] = workingGraph[a].filter((n) => n !== b);
+        // Step 1: Remove history years until we can't find a cycle
+        for (let year of historyYears) {
+          applyHistory(graph, parsedHistory[year]);
+          const cycles = findAllHamiltonianCycles(graph, parsedNames[0]);
+          if (cycles.length === 0) {
+            // Step 2: Restore the last removed year
+            if (removedYears.length > 0) {
+              graph = JSON.parse(JSON.stringify(baseGraph));
+              const restorable = [...removedYears.slice(0, -1)];
+              for (let y of restorable) {
+                applyHistory(graph, parsedHistory[y]);
               }
-            });
-            lastUsedYearIndex = i + 1;
-          } else {
+
+              const lastRepeatYear = removedYears[removedYears.length - 1];
+              repeatedYear = lastRepeatYear;
+
+              let cycles = findAllHamiltonianCycles(graph, parsedNames[0]);
+              if (cycles.length === 1) {
+                // Try restoring the next year too
+                const nextIndex = historyYears.indexOf(lastRepeatYear) - 1;
+                if (nextIndex >= 0) {
+                  const nextYear = historyYears[nextIndex];
+                  applyHistory(graph, parsedHistory[nextYear]);
+                  repeatedYear = nextYear;
+                  cycles = findAllHamiltonianCycles(graph, parsedNames[0]);
+                }
+              }
+
+              finalCycles = cycles;
+            }
             break;
+          } else {
+            removedYears.push(year);
           }
         }
 
-        if (allValidCycles.length > 0) {
+        if (finalCycles.length > 0) {
+          allValidCycles = finalCycles;
           renderResult(
-            allValidCycles[Math.floor(Math.random() * allValidCycles.length)]
+            finalCycles[Math.floor(Math.random() * finalCycles.length)]
           );
           document.getElementById(
-            "buttonContainer"
-          ).innerHTML = `<button onclick="reroll()">🔁 Calculate Again</button>`;
-          document.getElementById("earlierRepeatsBtn").style.display = "inline";
+            "result"
+          ).innerHTML += `<strong>Last repeated year: ${repeatedYear}</strong>`;
         } else {
           document.getElementById("result").textContent =
-            "No Hamiltonian cycle found.";
+            "No Hamiltonian cycle found, even after restoring history.";
           drawGraph(baseGraph);
         }
+        document.getElementById("downloadHistoryBtn").style.display =
+          "inline-block";
       }
 
-      function allowLaterRepeats() {
-        const historyYears = Object.keys(parsedHistory).sort((a, b) => b - a);
+      // Helper to remove edges from graph
+      function applyHistory(graph, edges) {
+        edges.forEach(([from, to]) => {
+          if (graph[from]) {
+            graph[from] = graph[from].filter((n) => n !== to);
+          }
+        });
+      }
 
-        if (lastUsedYearIndex <= 0) {
-          alert("All years have been relaxed.");
-          return;
-        }
-
-        // Step back one year (i.e., allow one newer year to repeat)
-        lastUsedYearIndex--;
-
-        const relaxedGraph = JSON.parse(JSON.stringify(baseGraph));
-
-        // Apply only history from years *after* the relaxed year
-        for (let i = lastUsedYearIndex; i < historyYears.length; i++) {
-          const year = historyYears[i];
-          parsedHistory[year].forEach(([a, b]) => {
-            if (relaxedGraph[a]) {
-              relaxedGraph[a] = relaxedGraph[a].filter((n) => n !== b);
-            }
-          });
-        }
-
-        const cycles = findAllHamiltonianCycles(relaxedGraph, parsedNames[0]);
-        if (cycles.length > 0) {
-          allValidCycles = cycles;
-          renderResult(cycles[Math.floor(Math.random() * cycles.length)]);
-        } else {
-          document.getElementById("result").textContent =
-            "No cycle found, even with more recent repeats allowed.";
-        }
+      function removeHistoryFromGraph(graph, edges) {
+        edges.forEach(([a, b]) => {
+          if (graph[a]) {
+            graph[a] = graph[a].filter((n) => n !== b);
+          }
+        });
       }
 
       function reroll() {
@@ -649,6 +665,45 @@ Bob,Charlie
           document.getElementById("result").textContent =
             "No Hamiltonian cycle could be found with this history.";
         }
+      }
+
+      function downloadUpdatedHistory() {
+        const currentYear = new Date().getFullYear().toString();
+        const newHistory = { ...parsedHistory };
+        newHistory[currentYear] = [];
+
+        // Add the latest cycle to the current year's history
+        if (allValidCycles.length > 0) {
+          const selectedCycle = allValidCycles[0]; // or keep track of the last displayed
+          for (let i = 0; i < selectedCycle.length - 1; i++) {
+            newHistory[currentYear].push([
+              selectedCycle[i],
+              selectedCycle[i + 1],
+            ]);
+          }
+        }
+
+        // Convert to CSV string
+        let csv = "";
+        const years = Object.keys(newHistory).sort();
+        for (const year of years) {
+          csv += `${year},\n`;
+          for (const [a, b] of newHistory[year]) {
+            csv += `${a},${b}\n`;
+          }
+        }
+
+        // Create downloadable file
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+
+        const downloadLink = document.createElement("a");
+        downloadLink.href = url;
+        downloadLink.download = `history_${currentYear}.csv`; // ← this sets the dynamic filename
+        downloadLink.style.display = "none";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
       }
     </script>
   </body>
