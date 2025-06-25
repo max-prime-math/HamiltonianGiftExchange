@@ -7,7 +7,8 @@
   <style>
     body { font-family: sans-serif; margin: 2rem; }
     input[type="file"], textarea, button { display: block; margin-bottom: 1rem; width: 100%; max-width: 500px; }
-    pre { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .box { background: #f4f4f4; padding: 1rem; white-space: pre-wrap; border-radius: 5px; }
   </style>
 </head>
 <body>
@@ -20,6 +21,9 @@
   <label>Bad Pairs CSV (e.g., A,B on each line):</label>
   <input type="file" id="badpairsCSV" accept=".csv" />
 
+  <label>History CSV (e.g., A,B to represent A gave to B):</label>
+  <input type="file" id="historyCSV" accept=".csv" />
+
   <button onclick="parseCSVs()">Parse CSV Files</button>
 
   <h2>Or Enter Data Manually</h2>
@@ -29,55 +33,72 @@
   <label>Bad Pairs (one pair per line, comma-separated):</label>
   <textarea id="badpairsManual" rows="6" placeholder="A,B\nC,D"></textarea>
 
+  <label>History (one pair per line, comma-separated):</label>
+  <textarea id="historyManual" rows="6" placeholder="A,B\nB,C"></textarea>
+
   <button onclick="parseManual()">Parse Manual Input</button>
 
   <h2>Parsed Data</h2>
-  <pre id="output"></pre>
+  <div class="grid">
+    <div class="box">
+      <h3>Names</h3>
+      <pre id="outputNames"></pre>
+    </div>
+    <div class="box">
+      <h3>Bad Pairs</h3>
+      <pre id="outputBadpairs"></pre>
+    </div>
+    <div class="box">
+      <h3>History</h3>
+      <pre id="outputHistory"></pre>
+    </div>
+  </div>
 
   <script>
     function parseCSVs() {
       const namesFile = document.getElementById('namesCSV').files[0];
       const badpairsFile = document.getElementById('badpairsCSV').files[0];
+      const historyFile = document.getElementById('historyCSV').files[0];
 
-      if (!namesFile || !badpairsFile) {
-        alert("Please upload both CSV files.");
+      if (!namesFile || !badpairsFile || !historyFile) {
+        alert("Please upload all three CSV files.");
         return;
       }
 
+      let names = [], badpairs = [], history = [];
+
       const reader1 = new FileReader();
       const reader2 = new FileReader();
-      const output = document.getElementById('output');
-      let names = [], badpairs = [];
+      const reader3 = new FileReader();
 
       reader1.onload = function (e) {
         names = e.target.result.trim().split(',').map(s => s.trim());
-        if (badpairs.length > 0) showParsed();
+        document.getElementById('outputNames').textContent = names.join("\n");
       };
 
       reader2.onload = function (e) {
-        badpairs = e.target.result.trim().split(/\r?\n/).map(line => {
-          const [a, b] = line.split(',').map(s => s.trim());
-          return [a, b];
-        });
-        if (names.length > 0) showParsed();
+        badpairs = e.target.result.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
+        document.getElementById('outputBadpairs').textContent = badpairs.map(p => p.join(" → ")).join("\n");
+      };
+
+      reader3.onload = function (e) {
+        history = e.target.result.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
+        document.getElementById('outputHistory').textContent = history.map(p => p.join(" → ")).join("\n");
       };
 
       reader1.readAsText(namesFile);
       reader2.readAsText(badpairsFile);
-
-      function showParsed() {
-        output.textContent = JSON.stringify({ names, badpairs }, null, 2);
-        // Plug this into your graph logic next
-      }
+      reader3.readAsText(historyFile);
     }
 
     function parseManual() {
       const names = document.getElementById('namesManual').value.split(',').map(s => s.trim());
-      const badpairs = document.getElementById('badpairsManual').value.trim().split(/\r?\n/).map(line => {
-        const [a, b] = line.split(',').map(s => s.trim());
-        return [a, b];
-      });
-      document.getElementById('output').textContent = JSON.stringify({ names, badpairs }, null, 2);
+      const badpairs = document.getElementById('badpairsManual').value.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
+      const history = document.getElementById('historyManual').value.trim().split(/\r?\n/).map(line => line.split(',').map(s => s.trim()));
+
+      document.getElementById('outputNames').textContent = names.join("\n");
+      document.getElementById('outputBadpairs').textContent = badpairs.map(p => p.join(" → ")).join("\n");
+      document.getElementById('outputHistory').textContent = history.map(p => p.join(" → ")).join("\n");
     }
   </script>
 </body>
