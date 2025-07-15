@@ -1,66 +1,85 @@
 # Hamiltonian Gift Exchange
 This program creates a Hamiltonian cycle for a gift exchange with many people.  Can include pairs of people who don't want to give gifts to each other in the exchange, such as partners, or people who gave gifts to each other last year.  This is nice for large families during holidays where a gift exchange makes more sense than everybody buying for everybody.  A [Hamiltonian cycle](https://en.wikipedia.org/wiki/Hamiltonian_path) is a cycle that visits each vertex exactly once.  This is valuable in this usecase because it means the gift exchange can be done in one big cycle, where Person A gives to Person B, then Person B gives to Person C, until finally the last person gives to Person A.  It also prevents small cycles, such as Person A giving to Person B and Person B giving to Person A.
 
-## Installation
-Download and run via Python.  You may need to install [networkx](https://networkx.org/documentation/stable/install.html).
+Feel free to build it yourself, or access it easily using this link.
 
-## Usage
-Open names.csv and write your list of names.  Make sure to not include any unnecessary whitespace.
-```
-A,B,C,D,E,F,G,H
-```
-Now open badpairs.csv to include pairs who do not go together.  The top rows underneath the text badpairs are universal: no matter what these people will not give gifts to each other.
-```
-badpairs
-A,B
-C,D
-E,F
-G,H
-```
-Still in badpairs.csv, you can also add previous years' exchanges.  This will allow you to include previous years into badpairs, in other words, people don't have to buy for the same person again for several years.
-```
-year2020
-A,C
-B,G
-C,H
-D,B
-E,A
-G,E
-H,D
-...
-year2023
-A,D
-D,E
-E,C
-C,B
-B,H
-H,F
-F,G
-G,A
-```
-Make a list of the previous years you want to include in badpairs.  If you go back too many years, or if you have too many badpairs, a Hamiltonian cycle may not exist.  So you may need to alter this until a Hamiltonian cycle exists.
-```
-prevYears = [year2023,year2022,year2021,year2020]
-```
-Run the program.
-```
-python hamiltonian-gift-exchange.py
-```
-You will get a popup of the digraph that represents all possible gift exchanges (i.e. the complete digraph minus the badpairs).  This is the digraph that the program will attempt to find a Hamiltonian cycle in, and isnt very useful for the end result. You can save this or exit the window.
+https://max-prime-math.github.io/HamiltonianGiftExchange/
 
-![image](digraph.png)
+## Algorithm
 
-Then you will get a second popup of the Hamiltonian cycle that is the gift exchange.  You will also get some text output in the terminal.
+1. Build a complete directed graph excluding bad pairs
+2. Remove edges based on most recent year’s history
+3. Search for Hamiltonian cycles
+4. If no cycle found:
+   - Restore edges from the previous year and try again
+   - If only one cycle exists, restore additional years until more options exist
+5. Randomly choose a cycle and display it
 
-![image](hamiltonian-cycle.png)
+## Formatting CSV Files
 
+You can either paste the data into the text boxes or upload CSV files. The expected formats are:
+
+### Names CSV (or textarea)
+A single line with comma-separated names:
 ```
-Hamiltonian Cycle: ['A', 'G', 'C', 'E', 'B', 'F', 'D', 'H', 'A']
+Alice, Bob, Carol, Dave
 ```
+**Notes:**
+- No headers
+- Order matters: the first name listed will be the starting giver in the cycle
 
-## Roadmap
-- Initialization routine if names and badpairs are blank. 
-- Ask user to include latest cycle in the badpairs file, prompt for name.
-- Automate the prevYears portion: make it include as many years as possible while a Hamiltonian cycle exists.
-- Package in a docker container.
-- Package in a smartphone app.
+### Bad Pairs CSV (or textarea)
+Each line contains two names separated by a comma (giver, receiver). These are disallowed gift pairings:
+```
+Alice,Bob
+Carol,Dave
+```
+**Notes:**
+- Each line goes both ways: neither person will give nor recieve from the other.
+
+### History CSV (or textarea)
+Year headers followed by one-way gift pairings for that year:
+```
+2023
+Alice,Bob
+Bob,Carol
+Carol,Dave
+Dave,Alice
+2024
+Alice,Carol
+Carol,Dave
+Dave,Bob
+Bob,Alice
+```
+**Notes:**
+- Year lines contain just the 4-digit year (with or without a comma)
+- Each subsequent line must be a gift pairing for that year
+- Each pair is one-way: `Alice,Bob` means Alice gave to Bob
+
+Make sure there are no extra spaces or blank lines at the end of the file for clean parsing.
+
+## Mobile Support
+
+On smaller screens:
+- Layout collapses to a single-column view
+- Fonts scale up for readability
+- Graph and controls remain interactive
+
+## Dark Mode
+
+Toggle dark mode with the button in the top-right corner.
+
+## Downloading Updated History
+
+After generating a new result, click **Download** to export a `history_YYYY.csv` file containing the new year’s updated gift assignments appended to existing history.
+
+## Future Ideas
+
+- Support group exclusions (e.g., "no one from the same household")
+- Visualize and explore all possible cycles
+- Email or print results directly
+- Save/load state from browser localStorage
+
+## Contributions
+
+Contributions, bug reports, and suggestions welcome! Feel free to fork or open an issue.
